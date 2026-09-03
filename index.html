@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopsLive | NBA Hub</title>
+    <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4, .sports-font {
+            font-family: 'Teko', sans-serif;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        }
+
+        .card-bg {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+        }
+
+        /* Ticker animation */
+        .ticker-wrapper {
+            overflow: hidden;
+            white-space: nowrap;
+            box-sizing: border-box;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 40s linear infinite;
+        }
+        
+        .ticker-content:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.7s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: all 0.7s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal-left.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.7s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal-right.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Pulse for live */
+        .live-dot {
+            height: 12px;
+            width: 12px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Glassmorphism */
+        .glass-header {
+            background-color: rgba(0, 0, 0, 0.02); /* Adjust as needed for generic theme */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .dark .glass-header {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Animated score */
+        .score-anim {
+            transition: all 0.3s ease;
+        }
+        .score-flash {
+            color: #f97316;
+            transform: scale(1.15);
+        }
+        
+        .timeline-container {
+            border-left: 2px dashed var(--border);
+            margin-left: 1.5rem;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 1.5rem;
+        }
+        
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            background: var(--background);
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            position: absolute;
+            left: -9px;
+            top: 4px;
+        }
+        
+        .stat-bar-bg {
+            background-color: var(--border);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Basketball texture overlay */
+        .bball-texture {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 16px 16px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Scores Ticker -->
+    <div class="ticker-wrapper py-2 text-sm font-semibold text-[var(--muted-foreground)]">
+        <div class="ticker-content flex space-x-12 px-6">
+            <span class="flex items-center"><span class="live-dot mr-2 w-2 h-2"></span> LAL 108 - DEN 106 (4Q 2:14)</span>
+            <span>BOS 112 - MIA 108 (Final)</span>
+            <span>GSW 120 - SAC 110 (Final)</span>
+            <span>NYK 95 - PHI 88 (Final)</span>
+            <span>DAL 104 - MIN 101 (Final)</span>
+            <span>PHX - LAC (Today, 8:00 PM EST)</span>
+            <span class="flex items-center"><span class="live-dot mr-2 w-2 h-2"></span> LAL 108 - DEN 106 (4Q 2:14)</span>
+            <span>BOS 112 - MIA 108 (Final)</span>
+            <span>GSW 120 - SAC 110 (Final)</span>
+        </div>
+    </div>
+
+    <!-- Sticky Navigation -->
+    <nav class="glass-header sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center transition-all">
+        <div class="flex items-center gap-2 cursor-pointer">
+            <svg class="w-8 h-8 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+            <span class="text-3xl sports-font tracking-wider mt-1">HoopsLive</span>
+        </div>
+        <div class="hidden md:flex space-x-8 font-semibold text-sm uppercase tracking-widest text-[var(--muted-foreground)]">
+            <a href="#" class="hover:text-[var(--primary)] transition-colors text-[var(--primary)]">Live Game</a>
+            <a href="#" class="hover:text-[var(--primary)] transition-colors">Scores</a>
+            <a href="#" class="hover:text-[var(--primary)] transition-colors">Standings</a>
+            <a href="#" class="hover:text-[var(--primary)] transition-colors">Tournament</a>
+        </div>
+        <button class="md:hidden text-[var(--foreground)]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </nav>
+
+    <!-- Hero / Live Game Section -->
+    <main class="relative w-full max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12 min-h-[85vh] flex flex-col justify-center">
+        
+        <div class="text-center mb-8 reveal">
+            <div class="inline-flex items-center bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide uppercase mb-4 border border-red-200 dark:border-red-800/50">
+                <span class="live-dot mr-2"></span> In-Season Tournament - Semifinals
+            </div>
+            <h1 class="text-5xl md:text-7xl sports-font mb-2">Game of the Week</h1>
+            <p class="text-[var(--muted-foreground)] text-lg">Crypto.com Arena • 4th Quarter • 2:14 Remaining</p>
+        </div>
+
+        <div class="card-bg rounded-3xl p-6 md:p-12 relative overflow-hidden shadow-2xl reveal">
+            <div class="bball-texture"></div>
+            
+            <div class="flex flex-col md:flex-row items-center justify-between relative z-10">
+                <!-- Away Team -->
+                <div class="flex flex-col items-center flex-1 w-full md:w-auto mb-8 md:mb-0">
+                    <div class="w-24 h-24 md:w-32 md:h-32 bg-[var(--background)] rounded-full flex items-center justify-center border-4 border-[#0E2240] shadow-lg mb-4 p-4">
+                        <img src="https://upload.wikimedia.org/wikipedia/en/7/76/Denver_Nuggets.svg" alt="Nuggets" class="w-full h-full object-contain">
+                    </div>
+                    <h2 class="sports-font text-3xl md:text-5xl tracking-wide">Denver</h2>
+                    <p class="font-bold text-[var(--muted-foreground)]">Nuggets</p>
+                </div>
+
+                <!-- Score Board -->
+                <div class="flex flex-col items-center flex-1 px-4 w-full">
+                    <div class="flex items-center justify-center space-x-4 md:space-x-8 w-full">
+                        <div id="away-score" class="text-6xl md:text-8xl sports-font font-bold score-anim">106</div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-sm font-bold text-[var(--muted-foreground)] uppercase tracking-widest mb-1">Q4</span>
+                            <span id="game-clock" class="text-2xl md:text-4xl sports-font font-bold text-[var(--primary)] px-4 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg">02:14</span>
+                            <span class="text-xs text-[var(--muted-foreground)] mt-2">Shot Clock: <b class="text-[var(--foreground)]">14</b></span>
+                        </div>
+                        <div id="home-score" class="text-6xl md:text-8xl sports-font font-bold score-anim">108</div>
+                    </div>
+                    
+                    <div class="w-full max-w-sm mt-8 flex justify-between text-sm font-semibold border-t border-[var(--border)] pt-4">
+                        <div class="text-center">
+                            <div class="text-[var(--muted-foreground)] text-xs uppercase mb-1">Timeouts</div>
+                            <div class="flex gap-1"><div class="w-6 h-2 bg-yellow-500 rounded-sm"></div><div class="w-6 h-2 bg-yellow-500 rounded-sm"></div></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-[var(--muted-foreground)] text-xs uppercase mb-1">Fouls</div>
+                            <div class="text-lg">4 - <span class="text-red-500 font-bold">BONUS</span> - 3</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-[var(--muted-foreground)] text-xs uppercase mb-1">Timeouts</div>
+                            <div class="flex gap-1"><div class="w-6 h-2 bg-yellow-500 rounded-sm"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Home Team -->
+                <div class="flex flex-col items-center flex-1 w-full md:w-auto mt-8 md:mt-0">
+                    <div class="w-24 h-24 md:w-32 md:h-32 bg-[var(--background)] rounded-full flex items-center justify-center border-4 border-[#552583] shadow-lg mb-4 p-4">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Los_Angeles_Lakers_logo.svg" alt="Lakers" class="w-full h-full object-contain">
+                    </div>
+                    <h2 class="sports-font text-3xl md:text-5xl tracking-wide">L.A.</h2>
+                    <p class="font-bold text-[var(--muted-foreground)]">Lakers</p>
+                </div>
+            </div>
+            
+            <!-- Quick Team Stats -->
+            <div class="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-[var(--border)] relative z-10 text-center text-sm md:text-base">
+                <div>
+                    <div class="font-bold text-lg mb-1">54%</div>
+                    <div class="stat-bar-bg mb-2"><div class="stat-bar-fill w-[54%] bg-[#0E2240]"></div></div>
+                    <div class="text-xs uppercase text-[var(--muted-foreground)] font-semibold">FG %</div>
+                    <div class="stat-bar-bg mt-2"><div class="stat-bar-fill w-[48%] bg-[#552583]"></div></div>
+                    <div class="font-bold text-lg mt-1">48%</div>
+                </div>
+                <div>
+                    <div class="font-bold text-lg mb-1">38%</div>
+                    <div class="stat-bar-bg mb-2"><div class="stat-bar-fill w-[38%] bg-[#0E2240]"></div></div>
+                    <div class="text-xs uppercase text-[var(--muted-foreground)] font-semibold">3PT %</div>
+                    <div class="stat-bar-bg mt-2"><div class="stat-bar-fill w-[41%] bg-[#552583]"></div></div>
+                    <div class="font-bold text-lg mt-1">41%</div>
+                </div>
+                <div>
+                    <div class="font-bold text-lg mb-1">12</div>
+                    <div class="stat-bar-bg mb-2"><div class="stat-bar-fill w-[40%] bg-[#0E2240]"></div></div>
+                    <div class="text-xs uppercase text-[var(--muted-foreground)] font-semibold">Turnovers</div>
+                    <div class="stat-bar-bg mt-2"><div class="stat-bar-fill w-[30%] bg-[#552583]"></div></div>
+                    <div class="font-bold text-lg mt-1">8</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-6 text-sm text-[var(--muted-foreground)] animate-bounce">
+            Scroll for Live Play-by-Play & Standings
+            <br>
+            <svg class="w-5 h-5 mx-auto mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </main>
+
+    <!-- Scroll Interactive Content -->
+    <section class="max-w-6xl mx-auto px-4 md:px-6 py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Play-by-Play -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="flex items-center justify-between mb-8 reveal-left">
+                    <h2 class="sports-font text-4xl">Live Play-by-Play</h2>
+                    <span class="bg-[var(--card)] border border-[var(--border)] px-4 py-2 rounded-full text-xs font-bold uppercase">4th Quarter</span>
+                </div>
+                
+                <div class="card-bg rounded-2xl p-6 md:p-8 reveal-left">
+                    <div class="timeline-container" id="play-by-play-feed">
+                        
+                        <!-- These will animate in sequentially -->
+                        <div class="timeline-item reveal" style="transition-delay: 0.1s">
+                            <div class="timeline-dot"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-[var(--primary)]">02:14</span>
+                                <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">LAL 108 - DEN 106</span>
+                            </div>
+                            <p class="font-semibold">L. James makes 27-foot three point jumper (A. Davis assists)</p>
+                        </div>
+                        
+                        <div class="timeline-item reveal" style="transition-delay: 0.2s">
+                            <div class="timeline-dot" style="border-color: #0E2240"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold">02:30</span>
+                                <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">LAL 105 - DEN 106</span>
+                            </div>
+                            <p class="text-[var(--muted-foreground)]">N. Jokic misses 14-foot fadeaway jumper</p>
+                        </div>
+
+                        <div class="timeline-item reveal" style="transition-delay: 0.3s">
+                            <div class="timeline-dot" style="border-color: #0E2240"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold">02:45</span>
+                                <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">LAL 105 - DEN 106</span>
+                            </div>
+                            <p class="font-semibold">J. Murray makes driving layup</p>
+                        </div>
+                        
+                        <div class="timeline-item reveal" style="transition-delay: 0.4s">
+                            <div class="timeline-dot"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold">03:02</span>
+                                <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">LAL 105 - DEN 104</span>
+                            </div>
+                            <p class="text-[var(--muted-foreground)]">A. Reaves bad pass (J. Murray steals)</p>
+                        </div>
+                        
+                        <div class="timeline-item reveal" style="transition-delay: 0.5s">
+                            <div class="timeline-dot"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-[var(--foreground)]">03:15</span>
+                                <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">LAL 105 - DEN 104</span>
+                            </div>
+                            <p class="font-semibold text-red-500">Lakers Full Timeout</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Tournament Points & Standings -->
+            <div class="space-y-8">
+                <div class="reveal-right">
+                    <h2 class="sports-font text-4xl mb-6">In-Season Tournament</h2>
+                    
+                    <div class="card-bg rounded-2xl p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)] opacity-10 rounded-bl-full -mr-10 -mt-10"></div>
+                        <h3 class="font-bold uppercase tracking-wider mb-4 border-b border-[var(--border)] pb-2">West Group A Points</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Team 1 -->
+                            <div class="flex items-center justify-between group cursor-pointer hover:bg-[var(--background)] p-2 -mx-2 rounded transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-[var(--primary)]">1</span>
+                                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center p-1">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Los_Angeles_Lakers_logo.svg" alt="LAL">
+                                    </div>
+                                    <span class="font-semibold">Lakers</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold">4-0</div>
+                                    <div class="text-xs text-[var(--muted-foreground)]">+74 Diff</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Team 2 -->
+                            <div class="flex items-center justify-between group cursor-pointer hover:bg-[var(--background)] p-2 -mx-2 rounded transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-[var(--muted-foreground)]">2</span>
+                                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center p-1">
+                                        <img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Phoenix_Suns_logo.svg" alt="PHX">
+                                    </div>
+                                    <span class="font-semibold">Suns</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold">3-1</div>
+                                    <div class="text-xs text-[var(--muted-foreground)]">+34 Diff</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Team 3 -->
+                            <div class="flex items-center justify-between group cursor-pointer hover:bg-[var(--background)] p-2 -mx-2 rounded transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-[var(--muted-foreground)]">3</span>
+                                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center p-1">
+                                        <img src="https://upload.wikimedia.org/wikipedia/en/7/76/Denver_Nuggets.svg" alt="DEN">
+                                    </div>
+                                    <span class="font-semibold">Nuggets</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold">2-2</div>
+                                    <div class="text-xs text-[var(--muted-foreground)]">-8 Diff</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal-right" style="transition-delay: 0.2s">
+                    <h3 class="sports-font text-2xl mb-4">Top Performers (Live)</h3>
+                    <div class="card-bg rounded-2xl p-5 space-y-4">
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden border-2 border-[#552583]">
+                                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png" alt="LeBron" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold">L. James <span class="text-xs text-[var(--muted-foreground)] font-normal ml-1">LAL</span></div>
+                                <div class="text-sm font-semibold text-[var(--primary)]">32 PTS, 9 REB, 11 AST</div>
+                            </div>
+                        </div>
+                        
+                        <div class="h-px w-full bg-[var(--border)]"></div>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden border-2 border-[#0E2240]">
+                                <img src="https://cdn.nba.com/headshots/nba/latest/1040x760/203999.png" alt="Jokic" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold">N. Jokic <span class="text-xs text-[var(--muted-foreground)] font-normal ml-1">DEN</span></div>
+                                <div class="text-sm font-semibold text-[#0E2240] dark:text-blue-400">28 PTS, 14 REB, 8 AST</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Previous Games Placeholder Section -->
+    <section class="border-t border-[var(--border)] bg-[var(--background)] py-16">
+        <div class="max-w-6xl mx-auto px-4 md:px-6">
+            <h2 class="sports-font text-4xl mb-8 reveal">Previous Games</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Game 1 -->
+                <div class="card-bg rounded-xl p-4 hover:border-[var(--primary)] transition-colors cursor-pointer reveal">
+                    <div class="text-xs font-bold text-[var(--muted-foreground)] uppercase mb-3 border-b border-[var(--border)] pb-2">Yesterday • Final</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center font-bold">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/8/8f/Boston_Celtics.svg" alt="BOS"></div> BOS
+                            </div>
+                            <div>112</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[var(--muted-foreground)]">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/f/fb/Miami_Heat_logo.svg" alt="MIA"></div> MIA
+                            </div>
+                            <div>108</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game 2 -->
+                <div class="card-bg rounded-xl p-4 hover:border-[var(--primary)] transition-colors cursor-pointer reveal" style="transition-delay: 0.1s">
+                    <div class="text-xs font-bold text-[var(--muted-foreground)] uppercase mb-3 border-b border-[var(--border)] pb-2">Yesterday • Final</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center font-bold">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/0/01/Golden_State_Warriors_logo.svg" alt="GSW"></div> GSW
+                            </div>
+                            <div>120</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[var(--muted-foreground)]">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/c/c7/SacramentoKings.svg" alt="SAC"></div> SAC
+                            </div>
+                            <div>110</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game 3 -->
+                <div class="card-bg rounded-xl p-4 hover:border-[var(--primary)] transition-colors cursor-pointer reveal" style="transition-delay: 0.2s">
+                    <div class="text-xs font-bold text-[var(--muted-foreground)] uppercase mb-3 border-b border-[var(--border)] pb-2">Yesterday • Final</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center font-bold">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/2/25/New_York_Knicks_logo.svg" alt="NYK"></div> NYK
+                            </div>
+                            <div>95</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[var(--muted-foreground)]">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/0/0e/Philadelphia_76ers_logo.svg" alt="PHI"></div> PHI
+                            </div>
+                            <div>88</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game 4 -->
+                <div class="card-bg rounded-xl p-4 hover:border-[var(--primary)] transition-colors cursor-pointer reveal" style="transition-delay: 0.3s">
+                    <div class="text-xs font-bold text-[var(--muted-foreground)] uppercase mb-3 border-b border-[var(--border)] pb-2">Yesterday • Final</div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center font-bold">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/9/97/Dallas_Mavericks_logo.svg" alt="DAL"></div> DAL
+                            </div>
+                            <div>104</div>
+                        </div>
+                        <div class="flex justify-between items-center text-[var(--muted-foreground)]">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6"><img src="https://upload.wikimedia.org/wikipedia/en/c/c2/Minnesota_Timberwolves_logo.svg" alt="MIN"></div> MIN
+                            </div>
+                            <div>101</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[var(--card)] border-t border-[var(--border)] py-8 mt-12 text-center text-[var(--muted-foreground)] text-sm">
+        <p class="sports-font text-2xl mb-2">HoopsLive</p>
+        <p>Interactive NBA Dashboard Demo - Design Concept Only</p>
+    </footer>
+
+    <script>
+        // Scroll Reveal Logic
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal, .reveal-left, .reveal-right");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        // Trigger once on load
+        reveal();
+        
+        // Ensure top content reveals immediately
+        setTimeout(() => { reveal(); }, 100);
+
+        // Simulation Logic for "Live Game"
+        let clockSeconds = 134; // 2:14
+        let scoreLAL = 108;
+        let scoreDEN = 106;
+        
+        function formatTime(sec) {
+            let m = Math.floor(sec / 60);
+            let s = sec % 60;
+            return `0${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        const clockEl = document.getElementById('game-clock');
+        const lalScoreEl = document.getElementById('home-score');
+        const denScoreEl = document.getElementById('away-score');
+        const feedContainer = document.getElementById('play-by-play-feed');
+
+        // Countdown timer
+        setInterval(() => {
+            if(clockSeconds > 0) {
+                clockSeconds--;
+                clockEl.textContent = formatTime(clockSeconds);
+            }
+        }, 1000);
+
+        // Simulated Play Events
+        const upcomingPlays = [
+            { time: 125, team: 'DEN', pts: 2, desc: 'N. Jokic makes layup', currentScore: 'LAL 108 - DEN 108' },
+            { time: 110, team: 'LAL', pts: 0, desc: 'A. Davis misses 10-foot jumper', currentScore: 'LAL 108 - DEN 108' },
+            { time: 95, team: 'LAL', pts: 0, desc: 'LAL Offensive Rebound', currentScore: 'LAL 108 - DEN 108' },
+            { time: 88, team: 'LAL', pts: 3, desc: 'D. Russell makes 25-foot three point jumper', currentScore: 'LAL 111 - DEN 108' },
+        ];
+
+        let eventIndex = 0;
+
+        setInterval(() => {
+            if(eventIndex < upcomingPlays.length && clockSeconds <= upcomingPlays[eventIndex].time) {
+                let play = upcomingPlays[eventIndex];
+                
+                // Update score
+                if(play.team === 'LAL') scoreLAL += play.pts;
+                if(play.team === 'DEN') scoreDEN += play.pts;
+                
+                if(play.pts > 0) {
+                    if(play.team === 'LAL') {
+                        lalScoreEl.textContent = scoreLAL;
+                        lalScoreEl.classList.add('score-flash');
+                        setTimeout(() => lalScoreEl.classList.remove('score-flash'), 500);
+                    } else {
+                        denScoreEl.textContent = scoreDEN;
+                        denScoreEl.classList.add('score-flash');
+                        setTimeout(() => denScoreEl.classList.remove('score-flash'), 500);
+                    }
+                }
+
+                // Add to feed
+                const newItem = document.createElement('div');
+                newItem.className = 'timeline-item reveal active';
+                
+                let dotColor = play.team === 'LAL' ? 'var(--primary)' : '#0E2240';
+                
+                newItem.innerHTML = `
+                    <div class="timeline-dot" style="border-color: ${dotColor}"></div>
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-[var(--foreground)]">${formatTime(play.time)}</span>
+                        <span class="text-sm font-semibold bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded">${play.currentScore}</span>
+                    </div>
+                    <p class="${play.pts > 0 ? 'font-semibold' : 'text-[var(--muted-foreground)]'}">${play.desc}</p>
+                `;
+                
+                // Insert at top of feed
+                feedContainer.insertBefore(newItem, feedContainer.firstChild);
+                
+                eventIndex++;
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>
